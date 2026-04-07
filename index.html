@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -134,6 +135,14 @@ html, body { height: 100%; background: var(--main-bg); color: var(--tx); font-fa
   font-weight: 600; margin-left: 6px; text-transform: uppercase;
 }
 .addbtn:hover { opacity: 0.85; }
+
+.resetbtn {
+  padding: 5px 12px; border-radius: 2px; font-size: 11px; cursor: pointer;
+  border: 1px solid rgba(255,255,255,0.1); color: rgba(255,255,255,0.25);
+  background: transparent; transition: all 0.12s; letter-spacing: 0.06em;
+  font-family: inherit; font-weight: 600; text-transform: uppercase;
+}
+.resetbtn:hover { border-color: rgba(255,80,80,0.4); color: #ff5050; }
 
 /* ── MAIN CONTENT ── */
 .main { flex: 1; overflow-y: auto; overflow-x: auto; padding: 0 24px 40px; background: var(--main-bg); }
@@ -393,6 +402,7 @@ create policy "public access" on initiatives
       <button class="fpill"        id="f-complete" onclick="setFilter('complete')">Complete</button>
       <button class="fpill"        id="f-suggest" onclick="setFilter('suggest')">Suggestions</button>
       <button class="addbtn" onclick="addRow(null)">+ Add initiative</button>
+      <button class="resetbtn" onclick="resetDemo()" title="Reset demo data">↺ Reset</button>
     </div>
   </div>
 
@@ -830,6 +840,26 @@ function render() {
       <div><span class="sv" style="color:#a07828">${high}</span>high</div>
       <button class="disconnect-btn" onclick="disconnect()">Disconnect</button>
     </div>`;
+}
+
+async function resetDemo() {
+  if (!confirm('Reset all demo data back to the original? This cannot be undone.')) return;
+  setSaveStatus('saving', 'Resetting…');
+  try {
+    // Delete all existing rows
+    const existing = await dbSelect('initiatives');
+    if (existing && existing.length) {
+      await Promise.all(existing.map(r => dbDelete('initiatives', r.id)));
+    }
+    rows = [];
+    await seedData();
+    setSaveStatus('saved', 'Reset complete');
+    setTimeout(() => setSaveStatus('', ''), 2000);
+    render();
+  } catch(e) {
+    setSaveStatus('error', 'Reset failed');
+    console.error(e);
+  }
 }
 
 function copySql() {
