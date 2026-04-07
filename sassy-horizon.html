@@ -1,0 +1,852 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sassy. Horizon — Product Roadmap</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Ultra&family=Questrial&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --black:   #0c0c0c;
+  --dark:    #111111;
+  --orange:  #ff5400;
+  --white:   #FAFAF8;
+  --main-bg: #F0F0EC;
+  --main-bg2:#E8F0F1;
+  --border-dark: rgba(255,255,255,0.08);
+  --border-light: rgba(0,0,0,0.1);
+  --tx:  #0c0c0c;
+  --txm: #ff5400;
+  --txd: rgba(0,0,0,0.35);
+  --bdr:  rgba(0,0,0,0.08);
+  --bdr2: rgba(0,0,0,0.15);
+  --rhv: rgba(255,84,0,0.04);
+  --crit: #c04040; --high: #a07828;
+}
+
+html, body { height: 100%; background: var(--main-bg); color: var(--tx); font-family: 'Questrial', sans-serif; font-size: 13px; line-height: 1.5; }
+
+/* ── SETUP ── */
+.setup-overlay {
+  position: fixed; inset: 0; background: var(--black);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 1000; padding: 24px;
+}
+.setup-card {
+  width: 100%; max-width: 560px;
+  background: #111; border: 1px solid rgba(255,84,0,0.2);
+  border-radius: 2px; padding: 36px 40px;
+  max-height: 90vh; overflow-y: auto;
+}
+.setup-logo { font-family: 'Ultra', serif; font-size: 20px; color: #FAFAF8; margin-bottom: 4px; }
+.setup-logo span { color: var(--orange); }
+.setup-title { font-size: 12px; color: rgba(255,255,255,0.3); margin-bottom: 28px; letter-spacing: 0.04em; }
+.setup-steps { display: flex; flex-direction: column; gap: 18px; margin-bottom: 24px; }
+.setup-step { display: flex; gap: 14px; align-items: flex-start; }
+.step-num {
+  width: 20px; height: 20px; border-radius: 50%;
+  background: rgba(255,84,0,0.1); border: 0.5px solid rgba(255,84,0,0.3);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 9px; color: var(--orange); flex-shrink: 0; margin-top: 1px; letter-spacing: 0.06em;
+}
+.step-label { font-size: 12px; color: #FAFAF8; margin-bottom: 4px; }
+.step-desc { font-size: 11px; color: rgba(255,255,255,0.35); line-height: 1.6; }
+.step-desc a { color: var(--orange); text-decoration: none; }
+.step-desc code { background: rgba(255,84,0,0.1); padding: 1px 5px; border-radius: 2px; font-size: 10px; font-family: monospace; color: var(--orange); }
+.sql-block {
+  margin-top: 8px; position: relative; cursor: pointer;
+  background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 2px; padding: 12px 14px; transition: border-color 0.12s;
+}
+.sql-block:hover { border-color: rgba(255,84,0,0.4); }
+.sql-pre { font-family: monospace; font-size: 10px; color: rgba(255,84,0,0.8); line-height: 1.75; white-space: pre; overflow-x: auto; margin: 0; }
+.sql-copy-hint { position: absolute; top: 8px; right: 10px; font-size: 9px; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(255,255,255,0.2); transition: color 0.12s; }
+.sql-block:hover .sql-copy-hint { color: var(--orange); }
+.setup-fields { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+.setup-field label { display: block; font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(255,255,255,0.25); margin-bottom: 5px; }
+.setup-field input {
+  width: 100%; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 2px; padding: 10px 12px; font-size: 12px; color: #FAFAF8;
+  font-family: inherit; outline: none; transition: border-color 0.12s;
+}
+.setup-field input:focus { border-color: rgba(255,84,0,0.5); }
+.setup-field input::placeholder { color: rgba(255,255,255,0.2); }
+.setup-connect {
+  width: 100%; padding: 12px; border-radius: 2px; font-size: 12px;
+  cursor: pointer; border: none; background: var(--orange);
+  color: #0c0c0c; font-family: inherit; letter-spacing: 0.08em; font-weight: 600;
+  text-transform: uppercase; transition: opacity 0.12s;
+}
+.setup-connect:hover { opacity: 0.85; }
+.setup-connect:disabled { opacity: 0.4; cursor: default; }
+.setup-error { font-size: 11px; color: #e26060; margin-top: 10px; display: none; }
+.setup-note { font-size: 10px; color: rgba(255,255,255,0.18); margin-top: 14px; line-height: 1.6; }
+
+/* ── LOADING ── */
+.loading-screen {
+  position: fixed; inset: 0; background: var(--black);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 999; flex-direction: column; gap: 16px;
+}
+.loading-spinner {
+  width: 24px; height: 24px; border: 2px solid rgba(255,84,0,0.15);
+  border-top-color: var(--orange); border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading-text { font-size: 11px; color: rgba(255,84,0,0.6); letter-spacing: 0.1em; text-transform: uppercase; }
+
+/* ── LAYOUT ── */
+.shell { display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+
+/* ── TOPBAR ── */
+.topbar {
+  flex-shrink: 0; display: flex; align-items: center; justify-content: space-between;
+  padding: 0 24px; height: 52px; background: var(--black);
+  border-bottom: 1px solid rgba(255,84,0,0.1); gap: 16px;
+}
+.topbar-left { display: flex; align-items: center; gap: 14px; }
+.wordmark { font-family: 'Ultra', serif; font-size: 16px; color: var(--white); letter-spacing: 0.02em; }
+.wordmark span { color: var(--orange); }
+.divider { width: 1px; height: 16px; background: rgba(255,255,255,0.1); }
+.subt { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(255,255,255,0.3); }
+.topbar-right { display: flex; gap: 6px; align-items: center; }
+
+.save-status { font-size: 10px; letter-spacing: 0.06em; color: rgba(255,84,0,0.4); margin-right: 6px; transition: color 0.3s; }
+.save-status.saving { color: rgba(255,84,0,0.6); }
+.save-status.saved  { color: var(--orange); }
+.save-status.error  { color: #e26060; }
+
+.fpill {
+  padding: 4px 12px; border-radius: 20px; font-size: 11px; cursor: pointer;
+  border: 1px solid rgba(255,84,0,0.2); color: rgba(255,255,255,0.35); background: transparent;
+  transition: all 0.12s; letter-spacing: 0.06em; font-family: inherit; font-weight: 600; text-transform: uppercase;
+}
+.fpill:hover { border-color: rgba(255,84,0,0.5); color: rgba(255,255,255,0.7); }
+.fpill.active { background: rgba(255,84,0,0.12); border-color: var(--orange); color: var(--orange); }
+
+.addbtn {
+  padding: 5px 14px; border-radius: 2px; font-size: 11px; cursor: pointer;
+  border: none; color: #0c0c0c; background: var(--orange);
+  transition: opacity 0.12s; letter-spacing: 0.06em; font-family: inherit;
+  font-weight: 600; margin-left: 6px; text-transform: uppercase;
+}
+.addbtn:hover { opacity: 0.85; }
+
+/* ── MAIN CONTENT ── */
+.main { flex: 1; overflow-y: auto; overflow-x: auto; padding: 0 24px 40px; background: var(--main-bg); }
+.tbl-wrap { min-width: 960px; }
+
+.col-heads {
+  display: grid;
+  grid-template-columns: 26px 2.4fr 100px 110px 80px 56px 64px 96px 80px;
+  gap: 0; padding: 10px 0 8px;
+  border-bottom: 1px solid var(--bdr2);
+  font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--txd);
+  background: var(--main-bg); z-index: 1;
+}
+.ch { padding: 0 6px; }
+
+.hz-hdr {
+  display: flex; align-items: center; gap: 10px;
+  padding: 20px 0 8px; background: var(--main-bg);
+}
+.hz-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+.hz-lbl { font-size: 14px; font-family: 'Ultra', serif; letter-spacing: 0.04em; text-transform: uppercase; }
+.hz-ct { font-size: 11px; color: var(--txd); }
+.hz-line { flex: 1; height: 0.5px; background: var(--bdr); }
+.hz-add {
+  padding: 3px 11px; border-radius: 20px; font-size: 10px; cursor: pointer;
+  border: 1px solid var(--bdr2); color: var(--txd); background: transparent;
+  font-family: inherit; letter-spacing: 0.06em; transition: all 0.12s; font-weight: 600; text-transform: uppercase;
+}
+.hz-add:hover { border-color: var(--orange); color: var(--orange); }
+
+.empty-zone { padding: 14px 0; text-align: center; font-size: 11px; color: var(--txd); border-bottom: 0.5px solid var(--bdr); }
+
+.rwrap { position: relative; }
+.rwrap.dragging { opacity: 0.3; }
+.rwrap.dov-a::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; background:var(--orange); z-index:30; border-radius:1px; }
+.rwrap.dov-b::after  { content:''; position:absolute; bottom:0; left:0; right:0; height:2px; background:var(--orange); z-index:30; border-radius:1px; }
+
+.row {
+  display: grid;
+  grid-template-columns: 26px 2.4fr 100px 110px 80px 56px 64px 96px 80px;
+  gap: 0; align-items: center;
+  border-bottom: 0.5px solid var(--bdr);
+  background: var(--main-bg); min-height: 44px; transition: background 0.1s;
+}
+.row:hover { background: var(--rhv); }
+
+.dh { width:26px; display:flex; align-items:center; justify-content:center; cursor:grab; color:var(--txd); font-size:13px; user-select:none; }
+.dh:active { cursor:grabbing; }
+
+.cell { padding: 5px 6px; min-width: 0; }
+.cell input, .cell select, .cell textarea {
+  width:100%; background:transparent; border:none; outline:none;
+  font-family:'Questrial', sans-serif; font-size:12px; color:var(--tx); padding:0; resize:none;
+}
+.cell input::placeholder { color: var(--txd); }
+.cell select { color: var(--tx); cursor:pointer; appearance:none; -webkit-appearance:none; }
+.cell select option { background: var(--main-bg); color: var(--tx); }
+.cell input:focus, .cell select:focus, .cell textarea:focus {
+  background: rgba(255,84,0,0.05); border-radius:2px;
+  box-shadow: 0 0 0 1px rgba(255,84,0,0.3); padding: 2px 4px;
+}
+
+.row-actions { display:flex; align-items:center; gap:4px; padding:0 4px; }
+.exptgl {
+  cursor:pointer; font-size:10px; color:var(--txd); user-select:none;
+  padding:4px 9px; transition:all 0.12s; line-height:1;
+  background:rgba(0,0,0,0.05); border:0.5px solid var(--bdr);
+  border-radius:20px; font-family:inherit; letter-spacing:0.06em; white-space:nowrap; font-weight:600; text-transform:uppercase;
+}
+.exptgl:hover { color:var(--orange); border-color:var(--orange); background:rgba(255,84,0,0.06); }
+.delbtn {
+  width:22px; height:22px; display:flex; align-items:center; justify-content:center;
+  cursor:pointer; color:var(--txd); border:none; background:transparent;
+  font-size:12px; opacity:0; transition:opacity 0.12s, color 0.12s; border-radius:2px; font-family:inherit;
+  pointer-events: none;
+}
+.row:hover .delbtn { opacity:1; pointer-events: auto; }
+.delbtn:hover { color:#e26060; }
+
+/* ── EXPAND ROW ── */
+.exprow { display:none; border-bottom:0.5px solid var(--bdr); background: var(--main-bg2); }
+.exprow.open { display:block; }
+
+.exp-tabs { display:flex; gap:0; border-bottom:0.5px solid var(--bdr); padding:0 34px; }
+.exp-tab {
+  padding:8px 14px; font-size:10px; letter-spacing:0.09em; text-transform:uppercase;
+  color:var(--txd); cursor:pointer; border-bottom:1.5px solid transparent;
+  margin-bottom:-0.5px; background:none; border-top:none; border-left:none; border-right:none;
+  font-family:inherit; transition:color 0.12s, border-color 0.12s;
+}
+.exp-tab:hover { color:var(--txm); }
+.exp-tab.active { color:var(--orange); border-bottom-color:var(--orange); }
+.exp-pane { display:none; }
+.exp-pane.active { display:block; }
+
+.expgrid { display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:10px; padding:10px 34px 14px; }
+.expfield { display:flex; flex-direction:column; gap:4px; }
+.explbl { font-size:9px; letter-spacing:0.1em; text-transform:uppercase; color:var(--tx); font-weight:600; }
+.exptxa {
+  background: rgba(255,255,255,0.6); border:0.5px solid var(--bdr);
+  border-radius:2px; padding:7px 8px; font-size:11px; color:var(--tx);
+  font-family:'Questrial', sans-serif; resize:vertical; min-height:72px;
+  outline:none; width:100%; line-height:1.55;
+}
+.exptxa:focus { border-color:rgba(255,84,0,0.4); box-shadow:0 0 0 1px rgba(255,84,0,0.2); }
+.expinp {
+  background: rgba(255,255,255,0.6); border:0.5px solid var(--bdr);
+  border-radius:2px; padding:6px 8px; font-size:11px; color:var(--tx);
+  font-family:'Questrial', sans-serif; outline:none; width:100%;
+}
+.expinp:focus { border-color:rgba(255,84,0,0.4); }
+.expinp-link { color:var(--orange); }
+
+/* ── JOB STORIES ── */
+.jobs-wrap { padding:10px 34px 14px; display:flex; flex-direction:column; gap:10px; }
+.job-card {
+  background: rgba(255,255,255,0.6); border:0.5px solid var(--bdr);
+  border-radius:2px; padding:10px 12px; display:grid;
+  grid-template-columns:80px 1fr; gap:6px 10px; align-items:start; position:relative;
+}
+.job-lbl { font-size:9px; letter-spacing:0.1em; text-transform:uppercase; color:var(--tx); font-weight:600; padding-top:6px; }
+.job-inp {
+  background:transparent; border:none; border-bottom:0.5px solid var(--bdr);
+  outline:none; font-family:inherit; font-size:11px; color:var(--tx);
+  padding:4px 0; width:100%; transition:border-color 0.12s;
+}
+.job-inp:focus { border-bottom-color:rgba(255,84,0,0.4); }
+.job-inp::placeholder { color:var(--txd); }
+.job-del {
+  position:absolute; top:8px; right:8px; background:none; border:none;
+  color:var(--txd); font-size:11px; cursor:pointer; opacity:0;
+  transition:opacity 0.12s, color 0.12s; font-family:inherit;
+}
+.job-card:hover .job-del { opacity:1; }
+.job-del:hover { color:#e26060; }
+.add-job-btn {
+  align-self:flex-start; padding:4px 12px; border-radius:20px; font-size:10px;
+  cursor:pointer; border:0.5px solid var(--bdr); color:var(--txd);
+  background:transparent; font-family:inherit; letter-spacing:0.06em; transition:all 0.12s; font-weight:600; text-transform:uppercase;
+}
+.add-job-btn:hover { border-color:var(--orange); color:var(--orange); }
+
+/* ── STATS BAR ── */
+.statsbar {
+  display:flex; gap:24px; padding:12px 24px;
+  border-top:1px solid rgba(255,84,0,0.1); background:var(--black);
+  font-size:10px; color:rgba(255,255,255,0.3); letter-spacing:0.06em; flex-shrink:0;
+}
+.sv { font-size:18px; color:var(--white); font-weight:400; display:block; line-height:1.2; font-family:'Ultra', serif; letter-spacing:0; text-transform:none; }
+
+.disconnect-btn {
+  margin-left:auto; padding:4px 11px; border-radius:20px; font-size:10px;
+  cursor:pointer; border:1px solid rgba(255,255,255,0.08); color:rgba(255,255,255,0.2);
+  background:transparent; font-family:inherit; letter-spacing:0.06em; transition:all 0.12s; font-weight:600; text-transform:uppercase;
+}
+.disconnect-btn:hover { border-color:rgba(255,80,80,0.4); color:#ff5050; }
+
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border-radius: 2px; }
+</style>
+</head>
+<body>
+
+<!-- LOADING -->
+<div class="loading-screen" id="loading">
+  <div class="loading-spinner"></div>
+  <div class="loading-text">Loading…</div>
+</div>
+
+<!-- SETUP -->
+<div class="setup-overlay" id="setup" style="display:none">
+  <div class="setup-card">
+    <div class="setup-logo">Sassy<span>.</span></div>
+    <div class="setup-title">Horizon Roadmap — first time setup</div>
+
+    <div class="setup-steps">
+      <div class="setup-step">
+        <div class="step-num">01</div>
+        <div class="step-body">
+          <div class="step-label">Create a Supabase project</div>
+          <div class="step-desc">Go to <a href="https://supabase.com" target="_blank">supabase.com</a>, create a free project. Name it anything, e.g. <code>horizon-roadmap</code>.</div>
+        </div>
+      </div>
+      <div class="setup-step">
+        <div class="step-num">02</div>
+        <div class="step-body">
+          <div class="step-label">Run this SQL in the SQL Editor</div>
+          <div class="step-desc">In Supabase go to <strong>SQL Editor</strong> and run this. Click to copy:</div>
+          <div class="sql-block" id="sql-block" onclick="copySql()" title="Click to copy">
+            <div class="sql-copy-hint" id="sql-hint">Click to copy</div>
+            <pre class="sql-pre">create table initiatives (
+  id uuid primary key default gen_random_uuid(),
+  sort_order integer default 0,
+  sprint text default 'now',
+  cat text default '',
+  area text default '',
+  title text default '',
+  priority text default 'Medium',
+  size text default 'M',
+  value text default '$$',
+  problem text default '',
+  why text default '',
+  scope text default '',
+  kpi text default '',
+  notes text default '',
+  ref text default '',
+  jobs jsonb default '[]',
+  created_at timestamptz default now()
+);
+alter table initiatives enable row level security;
+create policy "public access" on initiatives
+  for all using (true);</pre>
+          </div>
+        </div>
+      </div>
+      <div class="setup-step">
+        <div class="step-num">03</div>
+        <div class="step-body">
+          <div class="step-label">Paste your credentials below</div>
+          <div class="step-desc">Find these under <strong>Project Settings → API</strong> in Supabase.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="setup-fields">
+      <div class="setup-field">
+        <label>Project URL</label>
+        <input type="text" id="sb-url" placeholder="https://xxxxxxxxxxxx.supabase.co" />
+      </div>
+      <div class="setup-field">
+        <label>Anon / Public Key</label>
+        <input type="text" id="sb-key" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9…" />
+      </div>
+    </div>
+
+    <button class="setup-connect" id="connect-btn" onclick="connect()">Connect to Supabase</button>
+    <div class="setup-error" id="setup-error"></div>
+    <div class="setup-note">Credentials are saved in your browser's localStorage and never sent anywhere except your Supabase project.</div>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div class="shell" id="app" style="display:none">
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="wordmark">Sassy<span>.</span></div>
+      <div class="divider"></div>
+      <div class="subt">Horizon</div>
+    </div>
+    <div class="topbar-right">
+      <span class="save-status" id="save-status"></span>
+      <button class="fpill active" id="f-all"     onclick="setFilter('all')">All</button>
+      <button class="fpill"        id="f-now"     onclick="setFilter('now')">Now</button>
+      <button class="fpill"        id="f-next"    onclick="setFilter('next')">Next</button>
+      <button class="fpill"        id="f-later"   onclick="setFilter('later')">Later</button>
+      <button class="fpill"        id="f-complete" onclick="setFilter('complete')">Complete</button>
+      <button class="fpill"        id="f-suggest" onclick="setFilter('suggest')">Suggestions</button>
+      <button class="addbtn" onclick="addRow(null)">+ Add initiative</button>
+    </div>
+  </div>
+
+  <div class="main" id="main">
+    <div class="tbl-wrap" id="root"></div>
+  </div>
+
+  <div class="statsbar" id="sb"></div>
+</div>
+
+<script>
+const CREDS_KEY = 'sassy_horizon_creds';
+let API_URL = '';
+let API_KEY = '';
+
+async function dbFetch(path, method='GET', body=null) {
+  const opts = {
+    method,
+    headers: {
+      'apikey': API_KEY,
+      'Authorization': 'Bearer ' + API_KEY,
+      'Content-Type': 'application/json',
+      'Prefer': 'return=representation'
+    }
+  };
+  if (body) opts.body = JSON.stringify(body);
+  const res = await fetch(API_URL + '/rest/v1/' + path, opts);
+  if (!res.ok) { const txt = await res.text(); throw new Error(txt || res.statusText); }
+  const text = await res.text();
+  return text ? JSON.parse(text) : null;
+}
+
+async function dbSelect(table, order='sort_order') { return dbFetch(`${table}?order=${order}.asc&limit=500`); }
+async function dbInsert(table, row) { return dbFetch(table, 'POST', row); }
+async function dbUpdate(table, id, patch) { return dbFetch(`${table}?id=eq.${id}`, 'PATCH', patch); }
+async function dbDelete(table, id) {
+  const opts = { method:'DELETE', headers:{ 'apikey':API_KEY,'Authorization':'Bearer '+API_KEY,'Content-Type':'application/json' } };
+  const res = await fetch(API_URL + '/rest/v1/' + table + '?id=eq.' + id, opts);
+  if (!res.ok) throw new Error(res.statusText);
+}
+async function testConnection() { const d = await dbFetch('initiatives?limit=1'); return Array.isArray(d); }
+
+// ── STATE ──
+let filter = 'all';
+let rows = [];
+let nextSortOrder = 1000;
+let dragSrc = null, dragOver = null, dragPos = null;
+let saveTimer = null;
+let pollTimer = null;
+let userIsActive = false;
+let activityTimer = null;
+
+const CATS  = ['Product','Growth','Platform','Design','Operations','Engineering',''];
+const AREAS = ['Product','Engineering','Design','Marketing','Operations',''];
+const PRIS  = ['Critical','High','Medium','Low'];
+const SIZES = ['XS','S','M','L','XL','XXL'];
+const VALS  = ['$','$$','$$$','$$$$'];
+
+const HZ = [
+  { key:'now',      label:'Now',            dot:'#ff5400' },
+  { key:'next',     label:'Next',           dot:'rgba(255,84,0,0.6)' },
+  { key:'later',    label:'Later',          dot:'rgba(255,84,0,0.6)' },
+  { key:'complete', label:'Complete',       dot:'rgba(255,84,0,0.6)' },
+  { key:'suggest',  label:'Suggestion Box', dot:'rgba(255,84,0,0.6)' },
+];
+
+function markActive() {
+  userIsActive = true;
+  if (activityTimer) clearTimeout(activityTimer);
+  activityTimer = setTimeout(() => { userIsActive = false; }, 3000);
+}
+document.addEventListener('keydown', markActive);
+document.addEventListener('mousedown', markActive);
+document.addEventListener('focus', markActive, true);
+
+// ── CONNECT ──
+async function connect() {
+  const url = document.getElementById('sb-url').value.trim().replace(/\/$/, '');
+  const key = document.getElementById('sb-key').value.trim();
+  const btn = document.getElementById('connect-btn');
+  if (!url || !key) { showErr('Please fill in both fields.'); return; }
+  if (!url.startsWith('https://')) { showErr('URL should start with https://'); return; }
+  btn.disabled = true; btn.textContent = 'Connecting…';
+  document.getElementById('setup-error').style.display = 'none';
+  API_URL = url; API_KEY = key;
+  try {
+    await testConnection();
+    localStorage.setItem(CREDS_KEY, JSON.stringify({ url, key }));
+    await startApp();
+  } catch(e) {
+    API_URL = ''; API_KEY = '';
+    btn.disabled = false; btn.textContent = 'Connect to Supabase';
+    showErr('Could not connect: ' + (e.message || 'Check your URL and key, and make sure the table was created.'));
+  }
+}
+
+function showErr(msg) {
+  const el = document.getElementById('setup-error');
+  el.textContent = msg; el.style.display = 'block';
+}
+
+function disconnect() { location.reload(); }
+
+// ── INIT ──
+async function startApp() {
+  document.getElementById('loading').style.display = 'flex';
+  document.getElementById('setup').style.display = 'none';
+  await loadRows();
+  if (!rows.length) await seedData();
+  document.getElementById('loading').style.display = 'none';
+  document.getElementById('app').style.display = 'flex';
+  render();
+  startPolling();
+}
+
+async function loadRows() {
+  const data = await dbSelect('initiatives');
+  rows = (data || []).map(r => ({ ...r, jobs: r.jobs || [], expanded: false, activeTab: 'context' }));
+  if (rows.length) nextSortOrder = Math.max(...rows.map(r => r.sort_order || 0)) + 10;
+}
+
+async function seedData() {
+  const seed = [
+    { sort_order:10,  sprint:'now',      cat:'Product',     area:'Product',     title:'Onboarding redesign',                  priority:'Critical', size:'L',  value:'$$$',  problem:'New users drop off in the first 3 sessions. The current onboarding flow was built in 2022 and does not reflect the current product.', why:'Activation rate is our most important near-term metric. Every point of improvement compounds over the full user base.', scope:'New welcome flow, interactive product tour, milestone-based progress tracker, contextual empty states', kpi:'7-day activation rate', notes:'Coordinating with design and eng', ref:'', jobs:[] },
+    { sort_order:20,  sprint:'now',      cat:'Platform',    area:'Engineering',  title:'Dashboard load time under 1s',         priority:'High',     size:'M',  value:'$$',   problem:'P95 load time is 3.2s. Users on slower connections are abandoning before data renders.', why:'Every 100ms of latency reduces conversion. This is an infrastructure problem that will only get worse as data volume grows.', scope:'Query optimisation, lazy loading, client-side caching layer', kpi:'P95 load time', notes:'', ref:'', jobs:[] },
+    { sort_order:30,  sprint:'now',      cat:'Growth',      area:'Marketing',    title:'Referral program v1',                  priority:'High',     size:'M',  value:'$$$',  problem:'Organic growth is flat. We have strong NPS but no mechanism to convert advocates into referrers.', why:'CAC is high and paid channels are saturating. Referral has the best LTV:CAC ratio in our category.', scope:'In-app referral flow, shareable link generation, reward tracking, basic analytics', kpi:'Referred signups per month', notes:'', ref:'', jobs:[] },
+    { sort_order:40,  sprint:'next',     cat:'Product',     area:'Product',      title:'Mobile app — iOS and Android',         priority:'High',     size:'XXL', value:'$$$$', problem:'68% of our users check in on mobile web. The experience is poor and we have no push notification capability.', why:'Mobile is table stakes for our users. Competitors have had native apps for 2 years.', scope:'React Native app, core feature parity, push notifications, biometric auth', kpi:'Mobile DAU', notes:'Needs dedicated eng resource', ref:'', jobs:[] },
+    { sort_order:50,  sprint:'next',     cat:'Platform',    area:'Engineering',  title:'Integrations marketplace',             priority:'High',     size:'XL', value:'$$$',  problem:'Customers request integrations in almost every sales call. Current manual approach does not scale.', why:'Integrations reduce churn by 40% in comparable products. Each integration is a distribution channel.', scope:'Integration framework, Slack, HubSpot, Salesforce, Zapier connectors, developer docs', kpi:'Integrations adopted per account', notes:'', ref:'', jobs:[] },
+    { sort_order:60,  sprint:'next',     cat:'Design',      area:'Design',       title:'Design system v2',                     priority:'Medium',   size:'L',  value:'$$',   problem:'Component inconsistency across the product is slowing down design and creating quality issues.', why:'A shared design system reduces design-to-dev time by 30-40% and improves product quality significantly.', scope:'Component library, Figma tokens, documentation site, migration guide', kpi:'Design-to-dev cycle time', notes:'', ref:'', jobs:[] },
+    { sort_order:70,  sprint:'later',    cat:'Product',     area:'Product',      title:'AI insights layer',                    priority:'Medium',   size:'XL', value:'$$$$', problem:'Users have more data than they know what to do with. The product shows information but does not surface meaning.', why:'AI-powered insights is the clearest product differentiation available to us in the next 12 months.', scope:'Anomaly detection, natural language summaries, proactive alerts, trend analysis', kpi:'Insights acted on per user per week', notes:'Requires ML infrastructure investment', ref:'', jobs:[] },
+    { sort_order:80,  sprint:'later',    cat:'Platform',    area:'Engineering',  title:'Enterprise SSO and SCIM',              priority:'Medium',   size:'L',  value:'$$$',  problem:'Enterprise deals are blocked at security review because we lack SSO and user provisioning.', why:'Four enterprise deals in the current pipeline have explicitly flagged this as a blocker.', scope:'SAML 2.0, OIDC, SCIM user provisioning, audit logs, admin console', kpi:'Enterprise deals unblocked', notes:'', ref:'', jobs:[] },
+    { sort_order:90,  sprint:'later',    cat:'Growth',      area:'Marketing',    title:'Content and SEO program',              priority:'Low',      size:'M',  value:'$$',   problem:'We have near-zero organic search presence. All acquisition is paid or direct.', why:'Content compounds over time and reduces paid dependency. Long-term CAC reduction.', scope:'Blog, comparison pages, use case landing pages, link building', kpi:'Organic MQLs per month', notes:'', ref:'', jobs:[] },
+    { sort_order:100, sprint:'complete', cat:'Product',     area:'Product',      title:'Billing and subscription overhaul',    priority:'High',     size:'L',  value:'$$$',  problem:'Billing was built on a legacy provider. Upgrade and downgrade flows were broken for 30% of users.', why:'Billing issues directly caused churn and blocked expansion revenue.', scope:'New billing provider, self-serve plan management, usage-based billing, invoice history', kpi:'Billing-related churn', notes:'Shipped Q1', ref:'', jobs:[] },
+    { sort_order:110, sprint:'complete', cat:'Platform',    area:'Engineering',  title:'Multi-region data residency',          priority:'Critical', size:'XL', value:'$$$$', problem:'EU customers could not use the product due to data residency requirements.', why:'Required to close 6 EU enterprise deals that were blocked on compliance.', scope:'EU data region, data isolation, region selection at signup, compliance documentation', kpi:'EU deals closed', notes:'Shipped Q1', ref:'', jobs:[] },
+    { sort_order:120, sprint:'suggest',  cat:'Design',      area:'Design',       title:'Dark mode',                            priority:'Low',      size:'S',  value:'$',    problem:'Multiple user requests for dark mode support. Some power users work in low-light environments.', why:'Table stakes for modern products. Low effort, high perception value.', scope:'CSS variables system, theme toggle, localStorage persistence', kpi:'User satisfaction', notes:'', ref:'', jobs:[] },
+    { sort_order:130, sprint:'suggest',  cat:'Product',     area:'Product',      title:'Slack integration — daily digest',     priority:'Low',      size:'S',  value:'$$',   problem:'Users want a daily summary of their key metrics delivered to Slack without opening the app.', why:'Increases engagement and product surface area in the tools where users already spend time.', scope:'Slack app, configurable digest, metric selection, scheduling', kpi:'DAU from Slack clicks', notes:'', ref:'', jobs:[] },
+    { sort_order:140, sprint:'suggest',  cat:'Growth',      area:'Marketing',    title:'Customer stories program',             priority:'Low',      size:'M',  value:'$$',   problem:'We have strong case study content locked inside CS calls but no systematic way to surface it.', why:'Customer proof is the most effective content type for mid-funnel prospects.', scope:'Story templates, video interviews, case study pages, social content', kpi:'Story-influenced pipeline', notes:'', ref:'', jobs:[] },
+  ];
+
+  for (const row of seed) {
+    try {
+      const data = await dbInsert('initiatives', row);
+      const created = Array.isArray(data) ? data[0] : data;
+      rows.push({ ...created, jobs: [], expanded: false, activeTab: 'context' });
+    } catch(e) { console.error('Seed error:', e); }
+  }
+  if (rows.length) nextSortOrder = Math.max(...rows.map(r => r.sort_order || 0)) + 10;
+}
+
+function startPolling() {
+  pollTimer = setInterval(async () => {
+    if (userIsActive) return;
+    const active = document.activeElement;
+    if (active && (active.tagName==='INPUT'||active.tagName==='TEXTAREA'||active.tagName==='SELECT')) return;
+    try {
+      const data = await dbSelect('initiatives');
+      const incoming = (data||[]).map(r => ({ ...r, jobs: r.jobs||[] }));
+      let changed = false;
+      incoming.forEach(remote => {
+        const local = rows.find(r=>r.id===remote.id);
+        if (!local) { rows.push({ ...remote, expanded:false, activeTab:'context' }); changed=true; }
+        else if (JSON.stringify({...remote,expanded:undefined,activeTab:undefined}) !== JSON.stringify({...local,expanded:undefined,activeTab:undefined})) {
+          const exp=local.expanded, tab=local.activeTab;
+          Object.assign(local, remote); local.expanded=exp; local.activeTab=tab; changed=true;
+        }
+      });
+      const incomingIds = new Set(incoming.map(r=>r.id));
+      const before = rows.length;
+      rows = rows.filter(r=>incomingIds.has(r.id));
+      if (rows.length!==before) changed=true;
+      if (changed) { rows.sort((a,b)=>(a.sort_order||0)-(b.sort_order||0)); render(); }
+    } catch(e) { /* silent */ }
+  }, 5000);
+}
+
+function setSaveStatus(state, msg) {
+  const el = document.getElementById('save-status');
+  el.className = 'save-status ' + state; el.textContent = msg;
+}
+
+async function saveRow(id) {
+  const r = rows.find(r=>r.id===id); if (!r) return;
+  setSaveStatus('saving','Saving…');
+  try {
+    await dbUpdate('initiatives', id, {
+      sort_order:r.sort_order, sprint:r.sprint, cat:r.cat, area:r.area,
+      title:r.title, priority:r.priority, size:r.size, value:r.value,
+      problem:r.problem, why:r.why, scope:r.scope, kpi:r.kpi,
+      notes:r.notes, ref:r.ref, jobs:r.jobs||[]
+    });
+    setSaveStatus('saved','Saved');
+    setTimeout(()=>setSaveStatus('',''),2000);
+  } catch(e) { setSaveStatus('error','Save failed'); }
+}
+
+function debounceSave(id) {
+  if (saveTimer) clearTimeout(saveTimer);
+  saveTimer = setTimeout(()=>saveRow(id), 800);
+}
+
+function setFilter(f) {
+  filter = f;
+  ['all','now','next','later','complete','suggest'].forEach(k => {
+    const el = document.getElementById('f-'+k); if (!el) return;
+    el.className = 'fpill';
+    if (k===f) el.classList.add('active');
+  });
+  render();
+}
+
+async function addRow(sprint) {
+  const s = sprint || (filter!=='all' ? filter : 'now');
+  const payload = { sort_order:nextSortOrder, sprint:s, cat:'Product', area:'Product', title:'', priority:'Medium', size:'M', value:'$$', problem:'', why:'', scope:'', kpi:'', notes:'', ref:'', jobs:[] };
+  nextSortOrder += 10;
+  setSaveStatus('saving','Saving…');
+  try {
+    const data = await dbInsert('initiatives', payload);
+    const created = Array.isArray(data)?data[0]:data;
+    rows.push({ ...created, jobs:[], expanded:false, activeTab:'context' });
+    setSaveStatus('saved','Saved');
+    setTimeout(()=>setSaveStatus('',''),2000);
+    render();
+    setTimeout(()=>{ const els=document.querySelectorAll('.title-input'); if(els.length) els[els.length-1].focus(); },40);
+  } catch(e) { setSaveStatus('error','Save failed'); }
+}
+
+async function del(id) {
+  rows = rows.filter(r=>r.id!==id); render();
+  setSaveStatus('saving','Saving…');
+  try {
+    await dbDelete('initiatives',id);
+    setSaveStatus('saved','Saved');
+    setTimeout(()=>setSaveStatus('',''),2000);
+  } catch(e) { setSaveStatus('error','Delete failed'); }
+}
+
+function upd(id,f,v) {
+  const r=rows.find(r=>r.id===id); if (!r) return;
+  r[f]=v;
+  if (f==='sprint') { render(); saveRow(id); }
+  else debounceSave(id);
+}
+
+function tog(id) { const r=rows.find(r=>r.id===id); if(r) r.expanded=!r.expanded; render(); }
+function setTab(id,tab) { const r=rows.find(r=>r.id===id); if(r) r.activeTab=tab; render(); }
+
+function addJob(id) {
+  const r=rows.find(r=>r.id===id); if(!r) return;
+  if(!r.jobs) r.jobs=[];
+  r.jobs.push({as:'',when:'',want:'',so:'',inorder:''});
+  render(); debounceSave(id);
+}
+function delJob(id,ji) {
+  const r=rows.find(r=>r.id===id); if(!r||!r.jobs) return;
+  r.jobs.splice(ji,1); render(); debounceSave(id);
+}
+function updJob(id,ji,field,value) {
+  const r=rows.find(r=>r.id===id); if(!r||!r.jobs||!r.jobs[ji]) return;
+  r.jobs[ji][field]=value; debounceSave(id);
+}
+
+// ── DRAG ──
+function dstart(e,id) {
+  dragSrc=id; e.dataTransfer.effectAllowed='move';
+  setTimeout(()=>{ const el=document.querySelector('[data-rid="'+id+'"]'); if(el) el.classList.add('dragging'); },0);
+}
+function dover(e,id) {
+  e.preventDefault(); if(id===dragSrc) return;
+  const el=document.querySelector('[data-rid="'+id+'"]');
+  if(dragOver&&dragOver!==el) dragOver.classList.remove('dov-a','dov-b');
+  if(el) {
+    const rect=el.getBoundingClientRect();
+    const p=e.clientY<rect.top+rect.height/2?'above':'below';
+    dragPos=p; el.classList.remove('dov-a','dov-b');
+    el.classList.add(p==='above'?'dov-a':'dov-b'); dragOver=el;
+  }
+}
+async function ddrop(e,tid,ts) {
+  e.preventDefault();
+  if(dragOver) dragOver.classList.remove('dov-a','dov-b');
+  if(dragSrc===null) return;
+  const src=rows.find(r=>r.id===dragSrc); if(!src) return;
+  src.sprint=ts;
+  if(dragSrc!==tid) {
+    const si=rows.findIndex(r=>r.id===dragSrc); rows.splice(si,1);
+    const ti=rows.findIndex(r=>r.id===tid);
+    rows.splice(dragPos==='below'?ti+1:ti,0,src);
+  }
+  recomputeSortOrders(); dragSrc=null; dragOver=null; dragPos=null;
+  render(); await saveSortOrders();
+}
+async function dzone(e,s) {
+  e.preventDefault();
+  if(dragOver) dragOver.classList.remove('dov-a','dov-b');
+  const src=rows.find(r=>r.id===dragSrc);
+  if(src) { src.sprint=s; recomputeSortOrders(); }
+  dragSrc=null; dragOver=null; dragPos=null;
+  render(); await saveSortOrders();
+}
+function dend() {
+  if(dragOver) dragOver.classList.remove('dov-a','dov-b');
+  document.querySelectorAll('.dragging').forEach(el=>el.classList.remove('dragging'));
+  dragSrc=null; dragOver=null; dragPos=null;
+}
+function recomputeSortOrders() {
+  rows.forEach((r,i)=>{ r.sort_order=(i+1)*10; });
+  nextSortOrder=(rows.length+1)*10;
+}
+async function saveSortOrders() {
+  setSaveStatus('saving','Saving…');
+  try {
+    await Promise.all(rows.map(r=>dbUpdate('initiatives',r.id,{sort_order:r.sort_order,sprint:r.sprint})));
+    setSaveStatus('saved','Saved');
+    setTimeout(()=>setSaveStatus('',''),2000);
+  } catch(e) { setSaveStatus('error','Save failed'); }
+}
+
+// ── HELPERS ──
+function priColor(p) { return p==='Critical'?'#c04040':p==='High'?'#a07828':'#486160'; }
+function valColor(v) { return '#486160'; }
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+// ── RENDER ROW ──
+function rRow(r) {
+  const pc=priColor(r.priority), vc=valColor(r.value), tab=r.activeTab||'context';
+  return `
+<div class="rwrap" data-rid="${r.id}" draggable="true"
+  ondragstart="dstart(event,'${r.id}')"
+  ondragover="dover(event,'${r.id}')"
+  ondrop="ddrop(event,'${r.id}','${r.sprint}')"
+  ondragend="dend()">
+  <div class="row">
+    <div class="dh">⠿</div>
+    <div class="cell"><input class="title-input" type="text" value="${esc(r.title)}" placeholder="Initiative title…" oninput="upd('${r.id}','title',this.value)" /></div>
+    <div class="cell"><select onchange="upd('${r.id}','cat',this.value)">${CATS.map(c=>`<option value="${c}" ${r.cat===c?'selected':''}>${c||'Category'}</option>`).join('')}</select></div>
+    <div class="cell"><select onchange="upd('${r.id}','area',this.value)">${AREAS.map(a=>`<option value="${a}" ${r.area===a?'selected':''}>${a||'Area'}</option>`).join('')}</select></div>
+    <div class="cell"><select onchange="upd('${r.id}','priority',this.value)" style="color:${pc}">${PRIS.map(p=>`<option value="${p}" ${r.priority===p?'selected':''} style="color:${priColor(p)}">${p}</option>`).join('')}</select></div>
+    <div class="cell" style="text-align:center"><select onchange="upd('${r.id}','size',this.value)" style="color:var(--txd);text-align:center;width:100%">${SIZES.map(s=>`<option value="${s}" ${r.size===s?'selected':''}>${s}</option>`).join('')}</select></div>
+    <div class="cell" style="text-align:center"><select onchange="upd('${r.id}','value',this.value)" style="color:${vc};text-align:center;width:100%">${VALS.map(v=>`<option value="${v}" ${r.value===v?'selected':''}>${v}</option>`).join('')}</select></div>
+    <div class="cell"><select onchange="upd('${r.id}','sprint',this.value)" style="font-size:11px;color:var(--txd);width:100%">
+      <option value="now"      ${r.sprint==='now'     ?'selected':''}>1 – Now</option>
+      <option value="next"     ${r.sprint==='next'    ?'selected':''}>2 – Next</option>
+      <option value="later"    ${r.sprint==='later'   ?'selected':''}>3 – Later</option>
+      <option value="complete" ${r.sprint==='complete'?'selected':''}>4 – Complete</option>
+      <option value="suggest"  ${r.sprint==='suggest' ?'selected':''}>5 – Suggestion Box</option>
+    </select></div>
+    <div class="cell row-actions">
+      <button class="exptgl" onclick="tog('${r.id}')">${r.expanded?'▾ Close':'▸ Details'}</button>
+      <button class="delbtn" onclick="del('${r.id}')" title="Remove">✕</button>
+    </div>
+  </div>
+  <div class="exprow ${r.expanded?'open':''}">
+    <div class="exp-tabs">
+      <button class="exp-tab ${tab!=='jobs'?'active':''}" onclick="setTab('${r.id}','context')">Context</button>
+      <button class="exp-tab ${tab==='jobs'?'active':''}"  onclick="setTab('${r.id}','jobs')">Job Stories</button>
+    </div>
+    <div class="exp-pane ${tab!=='jobs'?'active':''}">
+      <div class="expgrid">
+        <div class="expfield"><label class="explbl">What is the problem / opportunity?</label><textarea class="exptxa" oninput="upd('${r.id}','problem',this.value)">${esc(r.problem)}</textarea></div>
+        <div class="expfield"><label class="explbl">Why is this important?</label><textarea class="exptxa" oninput="upd('${r.id}','why',this.value)">${esc(r.why)}</textarea></div>
+        <div class="expfield"><label class="explbl">Scope (Capabilities)</label><textarea class="exptxa" oninput="upd('${r.id}','scope',this.value)">${esc(r.scope)}</textarea></div>
+        <div class="expfield" style="display:flex;flex-direction:column;gap:8px;">
+          <div class="expfield"><label class="explbl">KPI</label><input class="expinp" type="text" value="${esc(r.kpi)}" placeholder="e.g. DAU, activation rate…" oninput="upd('${r.id}','kpi',this.value)" /></div>
+          <div class="expfield"><label class="explbl">Notes / Comments</label><input class="expinp" type="text" value="${esc(r.notes)}" placeholder="Internal notes…" oninput="upd('${r.id}','notes',this.value)" /></div>
+          <div class="expfield"><label class="explbl">Reference Link</label><input class="expinp expinp-link" type="text" value="${esc(r.ref)}" placeholder="https://…" oninput="upd('${r.id}','ref',this.value)" /></div>
+        </div>
+      </div>
+    </div>
+    <div class="exp-pane ${tab==='jobs'?'active':''}">
+      <div class="jobs-wrap">
+        ${(r.jobs||[]).map((j,ji)=>`
+        <div class="job-card">
+          <span class="job-lbl">As a</span><input class="job-inp" type="text" value="${esc(j.as)}" placeholder="e.g. product manager…" oninput="updJob('${r.id}',${ji},'as',this.value)" />
+          <span class="job-lbl">When I</span><input class="job-inp" type="text" value="${esc(j.when)}" placeholder="e.g. start my week…" oninput="updJob('${r.id}',${ji},'when',this.value)" />
+          <span class="job-lbl">I want to</span><input class="job-inp" type="text" value="${esc(j.want)}" placeholder="e.g. see what changed overnight…" oninput="updJob('${r.id}',${ji},'want',this.value)" />
+          <span class="job-lbl">So I can</span><input class="job-inp" type="text" value="${esc(j.so)}" placeholder="e.g. prioritise my day…" oninput="updJob('${r.id}',${ji},'so',this.value)" />
+          <span class="job-lbl">In order to</span><input class="job-inp" type="text" value="${esc(j.inorder)}" placeholder="e.g. focus the team on what matters…" oninput="updJob('${r.id}',${ji},'inorder',this.value)" />
+          <button class="job-del" onclick="delJob('${r.id}',${ji})">✕</button>
+        </div>`).join('')}
+        <button class="add-job-btn" onclick="addJob('${r.id}')">+ Add job story</button>
+      </div>
+    </div>
+  </div>
+</div>`;
+}
+
+// ── RENDER ──
+function render() {
+  const root = document.getElementById('root');
+  const vis = filter==='all' ? HZ : HZ.filter(h=>h.key===filter);
+  let html = `<div class="col-heads">
+  <div class="ch"></div><div class="ch">Initiative</div><div class="ch">Category</div>
+  <div class="ch">Area</div><div class="ch">Priority</div>
+  <div class="ch" style="text-align:center">Size</div>
+  <div class="ch" style="text-align:center">Value</div>
+  <div class="ch">Sprint group</div><div class="ch"></div>
+</div>`;
+  vis.forEach(h => {
+    const hrows = rows.filter(r=>r.sprint===h.key);
+    html += `<div>
+  <div class="hz-hdr">
+    <div class="hz-dot" style="background:${h.dot}"></div>
+    <span class="hz-lbl" style="color:${h.dot}">${h.label}</span>
+    <span class="hz-ct">${hrows.length} initiative${hrows.length!==1?'s':''}</span>
+    <div class="hz-line"></div>
+    <button class="hz-add" onclick="addRow('${h.key}')">+ Add</button>
+  </div>
+  <div ondragover="event.preventDefault()" ondrop="dzone(event,'${h.key}')">
+    ${hrows.length===0
+      ?`<div class="empty-zone" ondragover="event.preventDefault()" ondrop="dzone(event,'${h.key}')">Drop an initiative here or click + Add</div>`
+      :hrows.map(rRow).join('')}
+  </div>
+</div>`;
+  });
+  root.innerHTML = html;
+
+  const total=rows.length,
+    now=rows.filter(r=>r.sprint==='now').length,
+    next=rows.filter(r=>r.sprint==='next').length,
+    later=rows.filter(r=>r.sprint==='later').length,
+    complete=rows.filter(r=>r.sprint==='complete').length,
+    suggest=rows.filter(r=>r.sprint==='suggest').length,
+    crit=rows.filter(r=>r.priority==='Critical').length,
+    high=rows.filter(r=>r.priority==='High').length;
+
+  document.getElementById('sb').innerHTML = `
+    <div><span class="sv">${total}</span>total</div>
+    <div><span class="sv" style="color:var(--orange)">${now}</span>now</div>
+    <div><span class="sv" style="color:rgba(255,84,0,0.6)">${next}</span>next</div>
+    <div><span class="sv" style="color:rgba(255,84,0,0.6)">${later}</span>later</div>
+    <div><span class="sv" style="color:rgba(255,84,0,0.6)">${complete}</span>complete</div>
+    <div><span class="sv" style="color:rgba(255,84,0,0.6)">${suggest}</span>suggestions</div>
+    <div style="margin-left:auto;display:flex;gap:24px;align-items:center;">
+      <div><span class="sv" style="color:#c04040">${crit}</span>critical</div>
+      <div><span class="sv" style="color:#a07828">${high}</span>high</div>
+      <button class="disconnect-btn" onclick="disconnect()">Disconnect</button>
+    </div>`;
+}
+
+function copySql() {
+  const sql = document.querySelector('.sql-pre').textContent;
+  navigator.clipboard.writeText(sql).then(() => {
+    const hint = document.getElementById('sql-hint');
+    hint.textContent = 'Copied!';
+    setTimeout(()=>{ hint.textContent='Click to copy'; },2000);
+  });
+}
+
+// ── BOOT ──
+(async function boot() {
+  API_URL = 'https://cvdjlrfeamjhehydfwtl.supabase.co';
+  API_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN2ZGpscmZlYW1qaGVoeWRmd3RsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU1NjAwMjEsImV4cCI6MjA5MTEzNjAyMX0.X_oXA0pDJ_BWNCOmfja32mydjjD9rvajEoVrii-1oxg';
+  await startApp();
+})();
+</script>
+</body>
+</html>
