@@ -789,10 +789,10 @@ function rRow(r) {
         ${(r.jobs||[]).map((j,ji)=>`
         <div class="job-card">
           <span class="job-lbl">As a</span><input class="job-inp" type="text" value="${esc(j.as)}" placeholder="e.g. product manager…" oninput="updJob('${r.id}',${ji},'as',this.value)" />
-          <span class="job-lbl">When I</span><input class="job-inp" type="text" value="${esc(j.when)}" placeholder="e.g. start my week…" oninput="updJob('${r.id}',${ji},'when',this.value)" />
+          <span class="job-lbl">When I'm</span><input class="job-inp" type="text" value="${esc(j.when)}" placeholder="e.g. start my week…" oninput="updJob('${r.id}',${ji},'when',this.value)" />
           <span class="job-lbl">I want to</span><input class="job-inp" type="text" value="${esc(j.want)}" placeholder="e.g. see what changed overnight…" oninput="updJob('${r.id}',${ji},'want',this.value)" />
           <span class="job-lbl">So I can</span><input class="job-inp" type="text" value="${esc(j.so)}" placeholder="e.g. prioritise my day…" oninput="updJob('${r.id}',${ji},'so',this.value)" />
-          <span class="job-lbl">In order to</span><input class="job-inp" type="text" value="${esc(j.inorder)}" placeholder="e.g. focus the team on what matters…" oninput="updJob('${r.id}',${ji},'inorder',this.value)" />
+          <span class="job-lbl">In order that</span><input class="job-inp" type="text" value="${esc(j.inorder)}" placeholder="e.g. focus the team on what matters…" oninput="updJob('${r.id}',${ji},'inorder',this.value)" />
           <button class="job-del" onclick="delJob('${r.id}',${ji})">✕</button>
         </div>`).join('')}
         <button class="add-job-btn" onclick="addJob('${r.id}')">+ Add job story</button>
